@@ -49,12 +49,39 @@ End
 		{ $line }
 	}
 
-	# writes git branch names to the output
-	function Get-Branches
+	# Gets the list of local branches, as a set of objects looking like:
+	# Name = the name of the branch
+	# Remote = the remote tracking branch, if any
+	# LastHash = the hash of the last commit on the branch
+	# LastMsg = the first bit of the last commit message
+	function Get-GitBranches
 	{
-		switch -regex ( git branch )
+		switch -regex (git branch -vv)
 		{
-			"\s+(\w.*)" { $matches[1] }
+			# *     name    hash            remote     message
+			"\*?\s+(\S+)\s+([0-9a-f]+) (?:\[(.*?)\] )?(.*)"
+			{
+				[pscustomobject] @{
+					Name = $matches[1]
+					Remote = $matches[3]
+					LastHash = $matches[2]
+					LastMsg = $matches[4]
+				}
+			}
+		}
+	}
+
+	# Gets the status of the local git repository, as a set of objects looking like:
+	# Stat = the status of the file (M, A, or ??)
+	# File = the name of the file
+	function Get-GitStatus
+	{
+		switch -regex ((git status -z) -split "\0")
+		{
+			"(..) (.*)"
+			{
+				[pscustomobject] @{ Stat = $matches[1].Trim(); File = $matches[2] }
+			}
 		}
 	}
 
@@ -66,7 +93,14 @@ End
 	    # auto-complete git branches
 	    if( $last -match "^\s*git\s+(checkout|branch)" )
 	    {
-	        Get-Branches
+	        Get-GitBranches | select -Expand Name
+	        return
+	    }
+
+	    # auto-complete files for index operations
+	    if( $last -match "^\s*git\s+(add|stage|restore)" )
+	    {
+	        Get-GitStatus | select -Expand File
 	        return
 	    }
 	}
