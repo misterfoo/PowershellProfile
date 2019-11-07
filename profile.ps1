@@ -27,3 +27,32 @@ $env:HTTPS_PROXY = "http://$proxy"
 
 # Custom tab completion!
 . $PSScriptRoot\TabCompletion.ps1
+
+# Fancy copy-helper, to replace simple clip.exe
+function clip
+{
+	[CmdletBinding()]
+	param(
+		[Parameter( ValueFromPipeline = $true )]
+		[object[]] $thing
+	)
+
+	begin { $things = @() }
+	process { $things += $thing }
+	end
+	{
+		Write-Host -ForegroundColor Cyan "Invoking smart clip function (from Profile)"
+
+		$t = $things[0].GetType()
+		if( $t.Name -eq "HistoryInfo" )
+		{
+			# Copy the CommandLine only
+			$things | select -expand CommandLine | clip.exe
+		}
+		else
+		{
+			# Dunno what this is, just copy it
+			$things | clip.exe
+		}
+	}
+}
