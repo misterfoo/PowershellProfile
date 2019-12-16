@@ -11,6 +11,12 @@ function prompt
 	return "#$id >> "
 }
 
+# Sets the title of the window
+function title( $text )
+{
+	$host.UI.RawUI.WindowTitle = $text
+}
+
 # Developer stuff
 $env:path += ";" + (Get-Item "Env:ProgramFiles(x86)").Value + "\Git\bin"
 set-alias build D:\code\EMS\proj\utilities\development\autoSolver\bin\autoSolver.exe
@@ -25,7 +31,8 @@ $proxy = "PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com:80"
 $env:HTTP_PROXY = "http://$proxy"
 $env:HTTPS_PROXY = "http://$proxy"
 
-# Custom tab completion!
+# Additional script files
+. $PSScriptRoot\Out-Temp.ps1
 . $PSScriptRoot\TabCompletion.ps1
 
 # Fancy copy-helper, to replace simple clip.exe
