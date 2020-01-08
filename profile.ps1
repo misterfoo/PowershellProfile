@@ -32,7 +32,9 @@ $env:HTTP_PROXY = "http://$proxy"
 $env:HTTPS_PROXY = "http://$proxy"
 
 # Additional script files
+. $PSScriptRoot\Copy-Path.ps1
 . $PSScriptRoot\Out-Temp.ps1
+. $PSScriptRoot\Set-ClipboardText.ps1
 . $PSScriptRoot\TabCompletion.ps1
 
 # Fancy copy-helper, to replace simple clip.exe
