@@ -21,17 +21,8 @@ function title( $text )
 $env:path += ";" + (Get-Item "Env:ProgramFiles(x86)").Value + "\Git\bin"
 set-alias build D:\code\EMS\proj\utilities\development\autoSolver\bin\autoSolver.exe
 
-# Setup the GE-network proxy
-# note: the http: scheme is required in order for uaac to work. not sure if
-# it's required on the HTTPS_PROXY value.
-Write-Host ""
-Write-Host -ForegroundCOlor Cyan "Setting up GE proxies..."
-Write-Host ""
-$proxy = "PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com:80"
-$env:HTTP_PROXY = "http://$proxy"
-$env:HTTPS_PROXY = "http://$proxy"
-
 # Additional script files
+. $PSScriptRoot\GeCompany.ps1
 . $PSScriptRoot\Copy-Path.ps1
 . $PSScriptRoot\Out-Temp.ps1
 . $PSScriptRoot\Set-ClipboardText.ps1
