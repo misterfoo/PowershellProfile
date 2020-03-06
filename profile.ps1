@@ -5,9 +5,31 @@ Set-PSReadLineOption -Colors @{ "String" = "#00cc00" }
 # Set a custom fancy prompt
 function prompt
 {
-	$id = (Get-History -Count 1).Id + 1
 	write-host ""
+	$id = (Get-History -Count 1).Id + 1
 	write-host -BackgroundColor Gray -ForegroundColor Black "-- $pwd --"
+
+	if( $PSVersionTable.PSEdition -eq "Core" )
+	{
+		$ctx = Get-AzContext
+		$color = ""
+		$marker = ""
+		if( $ctx.Name -match "devqa" )
+		{
+			$color = "Green"
+			$marker = "+++++++"
+		}
+		elseif( $ctx.Name -match "prod" )
+		{
+			$color = "Yellow"
+			$marker = "!*!*!*!"
+		}
+
+		$ctx.Name -match "([\w\-]+) \(" > $null
+		$name = $matches[1]
+		write-host -ForegroundColor $color "$marker Azure: $name $marker"
+	}
+
 	return "#$id >> "
 }
 
