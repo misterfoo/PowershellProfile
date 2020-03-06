@@ -158,28 +158,6 @@ End
 	    
 	        $files = Get-GitStatus | select -Expand File
 
-			# The output of Get-GitStatus is relative to the root of the repo, but we want
-			# tab completion to function relative to the current directory
-			$root = Find-GitRoot
-			if( $root -ne $null )
-			{
-				$pwd = (Get-Location).Path
-				$relative = $pwd.Substring( $root.Length + 1 )
-				log "adjusting files relative to $relative"
-				$files = $files | % {
-						if( $_.StartsWith( $relative ) )
-						{
-							log "relative: $_"
-							$_.Substring( $relative.Length + 1 ) # +1 is for final path separator
-						}
-						else
-						{
-							log "absolute: $_"
-							$root + $_
-						}	
-					}
-			}
-
 	        return FilterResults $files $matches[2]
 	    }
 	}
