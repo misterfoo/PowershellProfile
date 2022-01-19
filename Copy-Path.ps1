@@ -12,5 +12,5 @@ function Copy-Path( [string] $path, [switch] $ModuleTester )
 		throw "Please specify a path or one of the well-known item switches"
 	}
 	
-	Set-ClipboardText (Resolve-Path $path)
+	(Resolve-Path $path).Path | clip.exe
 }

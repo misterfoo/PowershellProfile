@@ -30,24 +30,23 @@ End
 
    	function log( $thing )
    	{
-		$thing >> d:\temp\log.txt
+		# Un-comment this for debugging, but it's sloooow for some reason
+		Add-Content -Path "d:\temp\log.txt" $thing
    	}
 
 	trap
 	{
-		log $_.ToString()
+		title $_.ToString()
 		log $_.ScriptStackTrace
    	}
 
-	log "--------------------------------------"
-	log ""
-   	
 	# parse input
-	if ($PSCmdlet.ParameterSetName -eq 'ScriptInputSet') {
-		$_ = [System.Management.Automation.CommandCompletion]::MapStringInputToParsedInput($inputScript, $cursorColumn)
-		$ast = $_.Item1
-		$tokens = $_.Item2
-		$positionOfCursor = $_.Item3
+	if ($PSCmdlet.ParameterSetName -eq 'ScriptInputSet')
+	{
+		$m = Measure-Command { $parsed = [System.Management.Automation.CommandCompletion]::MapStringInputToParsedInput($inputScript, $cursorColumn) }
+		$ast = $parsed.Item1
+		$tokens = $parsed.Item2
+		$positionOfCursor = $parsed.Item3
 	}
 
 	# gets the last command on the line (using ; as the separator)
@@ -107,7 +106,7 @@ End
 	# Gets the status of the local git repository, as a set of objects looking like:
 	# Stat = the status of the file (M, A, or ??)
 	# File = the path and name of the file (note that paths are relative to repository root)
-	function Get-GitStatus
+	function Get-MyGitStatus
 	{
 		switch -regex (git status --porcelain=v1)
 		{
@@ -143,11 +142,33 @@ End
 	        return FilterResults $names $matches[2]
 	    }
 
+	    # auto-complete "git push" for branches with no remote
+	    #
+	    #					   git   command
+	    if( $last -match '^\s*git\s+push\s*$' )
+	    {
+			$name = git branch --show-current
+	        $branch = Get-GitBranches | where Name -eq $name
+	        if( $branch.Remote -eq $null )
+	        {
+				# Auto-complete the text required to set an upstream remote
+				return " --set-upstream origin $name"
+	        }
+
+	        return
+	    }
+
 	    # auto-complete files for index operations
 		#
 	    #					   git    command                -args     prefix-of-thing
 	    if( $last -match "^\s*git\s+(add|stage|restore)\s+(?:-\w+\s+)*(.*)" )
 	    {
+			# Disable for EMS proj tree; this is too slow
+			if( (Get-Location) -match "EMS" )
+			{
+				return
+			}
+
 			# Have they already typed some of the file they want? If so, skip tab
 			# completion if they started with .\ or ..\ or a drive letter
 			$prefix = $matches[2]
@@ -156,14 +177,14 @@ End
 				return @()
 			}
 	    
-	        $files = Get-GitStatus | select -Expand File
+	        $files = Get-MyGitStatus | select -Expand File
 
 	        return FilterResults $files $matches[2]
 	    }
 	}
 	
 	# see if any of our custom completion handlers match
-	$custom = @(Get-CustomCompletionPre)
+	$m = Measure-command { $custom = @(Get-CustomCompletionPre) }
 	if( $custom.Length -gt 0 )
 	{
 		# make a fake local version of TabExpansion which only returns the matches we want
@@ -175,10 +196,10 @@ End
 				$ast, $tokens, $positionOfCursor, $null)
 	}
 
-
 	# run the default tab completion
-	[System.Management.Automation.CommandCompletion]::CompleteInput(
-		$inputScript, $cursorColumn, $options)
+	$m = Measure-Command { $x = [System.Management.Automation.CommandCompletion]::CompleteInput(
+		$inputScript, $cursorColumn, $options) }
+	$x
 }
 
 }
